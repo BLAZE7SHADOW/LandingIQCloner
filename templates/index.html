@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Website Cloner</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🌐 Website Cloner</h1>
+            <p>Capture and clone any website with pixel-perfect accuracy</p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- URL Input Section -->
+            <div class="input-section">
+                <div class="url-input-container">
+                    <input type="url" id="urlInput" placeholder="Enter website URL (e.g., https://example.com)" 
+                           value="" />
+                    <button id="captureBtn" class="capture-btn">
+                        <span class="btn-text">Capture</span>
+                        <span class="btn-loader hidden">🔄</span>
+                    </button>
+                </div>
+                <div id="progressContainer" class="progress-container hidden">
+                    <div class="progress-bar">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div id="progressText" class="progress-text">Starting...</div>
+                </div>
+            </div>
+
+            <!-- Main Layout -->
+            <div class="layout">
+                <!-- Sidebar -->
+                <div class="sidebar">
+                    <h3>📁 Capture History</h3>
+                    <div id="capturesList" class="captures-list">
+                        {% if captures %}
+                            {% for capture in captures %}
+                            <div class="capture-item" data-folder="{{ capture.folder_name }}">
+                                <div class="capture-info">
+                                    <div class="capture-url">{{ capture.original_url }}</div>
+                                    <div class="capture-time">{{ capture.capture_time[:19].replace('T', ' ') }}</div>
+                                    <div class="capture-stats">
+                                        CSS: {{ capture.assets.css }} | 
+                                        JS: {{ capture.assets.js }} | 
+                                        Images: {{ capture.assets.images }}
+                                    </div>
+                                </div>
+                                <div class="capture-actions">
+                                    <button class="btn-view" onclick="viewCapture('{{ capture.folder_name }}')">View</button>
+                                    <button class="btn-compare" onclick="compareCapture('{{ capture.folder_name }}')">Compare</button>
+                                    <button class="btn-download" onclick="downloadCapture('{{ capture.folder_name }}')">⬇️</button>
+                                    <button class="btn-delete" onclick="deleteCapture('{{ capture.folder_name }}')">🗑️</button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="empty-state">
+                                <p>No captures yet. Enter a URL above to get started!</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Main View -->
+                <div class="main-view">
+                    <div id="welcomeScreen" class="welcome-screen">
+                        <div class="welcome-content">
+                            <h2>🚀 Welcome to Website Cloner</h2>
+                            <p>Enter any website URL to create a perfect offline copy</p>
+                            <div class="features">
+                                <div class="feature">
+                                    <h4>🎯 Pixel Perfect</h4>
+                                    <p>Captures exactly what you see in the browser</p>
+                                </div>
+                                <div class="feature">
+                                    <h4>📱 Responsive</h4>
+                                    <p>Preserves mobile and desktop layouts</p>
+                                </div>
+                                <div class="feature">
+                                    <h4>⚡ Fast</h4>
+                                    <p>Works offline once captured</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="comparisonView" class="comparison-view hidden">
+                        <div class="comparison-header">
+                            <h3 id="comparisonTitle">Comparison View</h3>
+                            <div class="view-controls">
+                                <button id="splitViewBtn" class="control-btn active">Split View</button>
+                                <button id="originalViewBtn" class="control-btn">Original</button>
+                                <button id="capturedViewBtn" class="control-btn">Captured</button>
+                                <button id="newTabBtn" class="control-btn">New Tab</button>
+                            </div>
+                        </div>
+                        <div class="comparison-content">
+                            <div id="originalFrame" class="frame-container">
+                                <h4>Original Website</h4>
+                                <iframe id="originalIframe" src="about:blank"></iframe>
+                            </div>
+                            <div id="capturedFrame" class="frame-container">
+                                <h4>Captured Website</h4>
+                                <iframe id="capturedIframe" src="about:blank"></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

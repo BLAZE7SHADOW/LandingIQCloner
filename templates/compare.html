@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compare - {{ metadata.original_url }}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 18px;
+            font-weight: normal;
+        }
+        
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-block;
+            transition: background-color 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+        
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        
+        .btn.active {
+            background: #e74c3c;
+        }
+        
+        .controls {
+            background: #ecf0f1;
+            padding: 10px 20px;
+            border-bottom: 1px solid #bdc3c7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .view-controls {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .info {
+            font-size: 14px;
+            color: #555;
+        }
+        
+        .comparison-container {
+            flex: 1;
+            display: flex;
+            background: white;
+        }
+        
+        .frame-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #34495e;
+        }
+        
+        .frame-section:last-child {
+            border-right: none;
+        }
+        
+        .frame-header {
+            background: #34495e;
+            color: white;
+            padding: 10px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .frame-content {
+            flex: 1;
+            position: relative;
+        }
+        
+        .frame-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: white;
+        }
+        
+        .single-view {
+            display: none;
+        }
+        
+        .single-view.active {
+            display: flex;
+        }
+        
+        .single-view .frame-section {
+            border-right: none;
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔍 Compare: {{ metadata.original_url }}</h1>
+        <div class="header-controls">
+            <a href="{{ url_for('view_capture', folder_name=folder_name) }}" class="btn btn-primary">Full View</a>
+            <a href="{{ url_for('download_capture', folder_name=folder_name) }}" class="btn btn-secondary">Download</a>
+            <a href="{{ url_for('index') }}" class="btn btn-secondary">Back</a>
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div class="view-controls">
+            <button id="splitBtn" class="btn btn-primary active">Split View</button>
+            <button id="originalBtn" class="btn btn-secondary">Original Only</button>
+            <button id="capturedBtn" class="btn btn-secondary">Captured Only</button>
+            <button id="newTabBtn" class="btn btn-secondary">New Tab</button>
+        </div>
+        <div class="info">
+            Captured: {{ metadata.capture_time[:19].replace('T', ' ') }} | 
+            Assets: {{ metadata.assets.css }} CSS, {{ metadata.assets.js }} JS, {{ metadata.assets.images }} Images
+        </div>
+    </div>
+    
+    <div class="comparison-container">
+        <!-- Split View -->
+        <div id="splitView" class="split-view">
+            <div class="frame-section">
+                <div class="frame-header">🌐 Original Website</div>
+                <div class="frame-content">
+                    <iframe id="originalFrame" src="{{ metadata.original_url }}"></iframe>
+                </div>
+            </div>
+            <div class="frame-section">
+                <div class="frame-header">📁 Captured Website</div>
+                <div class="frame-content">
+                    <iframe id="capturedFrame" src="{{ url_for('serve_captured_file', folder_name=folder_name, filename='index.html') }}"></iframe>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Original Only View -->
+        <div id="originalView" class="single-view">
+            <div class="frame-section">
+                <div class="frame-header">🌐 Original Website</div>
+                <div class="frame-content">
+                    <iframe src="{{ metadata.original_url }}"></iframe>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Captured Only View -->
+        <div id="capturedView" class="single-view">
+            <div class="frame-section">
+                <div class="frame-header">📁 Captured Website</div>
+                <div class="frame-content">
+                    <iframe src="{{ url_for('serve_captured_file', folder_name=folder_name, filename='index.html') }}"></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // View switching functionality
+        const splitBtn = document.getElementById('splitBtn');
+        const originalBtn = document.getElementById('originalBtn');
+        const capturedBtn = document.getElementById('capturedBtn');
+        const newTabBtn = document.getElementById('newTabBtn');
+        
+        const splitView = document.getElementById('splitView');
+        const originalView = document.getElementById('originalView');
+        const capturedView = document.getElementById('capturedView');
+        
+        function setActiveView(activeBtn, activeView) {
+            // Remove active class from all buttons
+            [splitBtn, originalBtn, capturedBtn].forEach(btn => {
+                btn.classList.remove('active');
+                btn.classList.add('btn-secondary');
+                btn.classList.remove('btn-primary');
+            });
+            
+            // Add active class to current button
+            activeBtn.classList.add('active');
+            activeBtn.classList.add('btn-primary');
+            activeBtn.classList.remove('btn-secondary');
+            
+            // Hide all views
+            [splitView, originalView, capturedView].forEach(view => {
+                view.style.display = 'none';
+            });
+            
+            // Show active view
+            activeView.style.display = 'flex';
+        }
+        
+        splitBtn.addEventListener('click', () => {
+            setActiveView(splitBtn, splitView);
+        });
+        
+        originalBtn.addEventListener('click', () => {
+            setActiveView(originalBtn, originalView);
+        });
+        
+        capturedBtn.addEventListener('click', () => {
+            setActiveView(capturedBtn, capturedView);
+        });
+        
+        newTabBtn.addEventListener('click', () => {
+            window.open('{{ url_for("view_capture", folder_name=folder_name) }}', '_blank');
+        });
+    </script>
+</body>
+</html>

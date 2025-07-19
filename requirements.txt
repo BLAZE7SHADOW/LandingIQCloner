@@ -1,0 +1,7 @@
+playwright==1.40.0
+beautifulsoup4==4.12.2
+requests==2.31.0
+flask==3.0.0
+lxml==4.9.3
+urllib3==2.1.0
+pillow==10.1.0
