@@ -91,6 +91,184 @@ class WebsiteCloner:
         (capture_dir / "assets" / "documents").mkdir(parents=True, exist_ok=True)
         
         return capture_dir
+    
+    def _create_analysis_package(self, capture_dir, assets, metadata):
+        """Create analysis package optimized for LLM analysis"""
+        try:
+            # Create analysis package directory
+            analysis_dir = capture_dir / "analysis-package"
+            analysis_dir.mkdir(exist_ok=True)
+            
+            # Create subdirectories
+            (analysis_dir / "key-assets").mkdir(exist_ok=True)
+            (analysis_dir / "key-assets" / "logos").mkdir(exist_ok=True)
+            (analysis_dir / "key-assets" / "hero-images").mkdir(exist_ok=True)
+            (analysis_dir / "key-assets" / "feature-screenshots").mkdir(exist_ok=True)
+            
+            # Copy essential files
+            self._copy_essential_files(capture_dir, analysis_dir)
+            
+            # Extract and organize key visual assets
+            self._extract_key_assets(capture_dir, analysis_dir, assets)
+            
+            # Generate analysis documentation
+            self._generate_analysis_documentation(capture_dir, analysis_dir, assets, metadata)
+            
+            print(f"✅ Analysis package created at: {analysis_dir}")
+            
+        except Exception as e:
+            print(f"Warning: Failed to create analysis package: {e}")
+    
+    def _copy_essential_files(self, capture_dir, analysis_dir):
+        """Copy essential files for analysis"""
+        essential_files = [
+            "index.html",
+            "screenshot.png", 
+            "metadata.json"
+        ]
+        
+        for filename in essential_files:
+            source_path = capture_dir / filename
+            if source_path.exists():
+                shutil.copy2(source_path, analysis_dir / filename)
+        
+        # Find and copy main CSS file
+        css_dir = capture_dir / "assets" / "css"
+        if css_dir.exists():
+            css_files = list(css_dir.glob("*.css"))
+            if css_files:
+                # Copy the largest CSS file (likely the main stylesheet)
+                main_css = max(css_files, key=lambda f: f.stat().st_size)
+                shutil.copy2(main_css, analysis_dir / "main-styles.css")
+    
+    def _extract_key_assets(self, capture_dir, analysis_dir, assets):
+        """Extract and organize key visual assets"""
+        images_dir = capture_dir / "assets" / "images"
+        if not images_dir.exists():
+            return
+        
+        # Define patterns for different asset types
+        logo_patterns = ['logo', 'brand', 'icon']
+        hero_patterns = ['hero', 'banner', 'background', 'main']
+        feature_patterns = ['feature', 'screenshot', 'demo', 'example']
+        
+        # Get all image files
+        image_files = list(images_dir.glob("*"))
+        
+        # Categorize and copy assets
+        for img_file in image_files:
+            filename_lower = img_file.name.lower()
+            
+            # Check for logos
+            if any(pattern in filename_lower for pattern in logo_patterns):
+                shutil.copy2(img_file, analysis_dir / "key-assets" / "logos" / img_file.name)
+            
+            # Check for hero images (also copy larger images)
+            elif (any(pattern in filename_lower for pattern in hero_patterns) or 
+                  img_file.stat().st_size > 100000):  # Large images likely to be hero/background
+                shutil.copy2(img_file, analysis_dir / "key-assets" / "hero-images" / img_file.name)
+            
+            # Check for feature screenshots
+            elif any(pattern in filename_lower for pattern in feature_patterns):
+                shutil.copy2(img_file, analysis_dir / "key-assets" / "feature-screenshots" / img_file.name)
+    
+    def _generate_analysis_documentation(self, capture_dir, analysis_dir, assets, metadata):
+        """Generate analysis documentation and asset inventory"""
+        
+        # Create analysis brief
+        analysis_brief = f"""# Landing Page Analysis Brief
+
+## Site Information
+- **Original URL**: {metadata.get('original_url', 'N/A')}
+- **Final URL**: {metadata.get('final_url', 'N/A')}
+- **Capture Time**: {metadata.get('capture_time', 'N/A')}
+- **Folder**: {metadata.get('folder_name', 'N/A')}
+
+## Asset Summary
+- **CSS Files**: {metadata.get('assets', {}).get('css', 0)}
+- **JavaScript Files**: {metadata.get('assets', {}).get('js', 0)}
+- **Images**: {metadata.get('assets', {}).get('images', 0)}
+- **Videos**: {metadata.get('assets', {}).get('videos', 0)}
+- **Fonts**: {metadata.get('assets', {}).get('fonts', 0)}
+
+## Files Included for Analysis
+
+### Essential Files
+1. **index.html** - Complete HTML structure and content
+2. **screenshot.png** - Full page visual representation
+3. **metadata.json** - Technical capture metadata
+4. **main-styles.css** - Primary stylesheet with design system
+
+### Key Visual Assets
+- **Logos & Branding**: Located in `key-assets/logos/`
+- **Hero Images**: Located in `key-assets/hero-images/`
+- **Feature Screenshots**: Located in `key-assets/feature-screenshots/`
+
+## Analysis Capabilities
+
+This package enables comprehensive analysis of:
+- **Visual Design**: Layout, typography, color scheme, spacing
+- **User Experience**: Navigation, content hierarchy, call-to-actions
+- **Content Strategy**: Messaging, value propositions, social proof
+- **Technical Implementation**: HTML structure, CSS architecture
+- **Conversion Optimization**: CTA placement, form design, trust signals
+- **Brand Consistency**: Logo usage, color palette, visual elements
+- **Responsive Design**: Mobile-first approach, breakpoints
+- **Accessibility**: Semantic HTML, contrast ratios, navigation
+
+## Recommended Analysis Approach
+
+1. **Visual Assessment**: Start with screenshot.png for overall layout
+2. **Content Analysis**: Review index.html for messaging and structure
+3. **Design System**: Examine main-styles.css for design tokens
+4. **Asset Quality**: Evaluate key visual assets for brand consistency
+5. **Technical Review**: Check metadata.json for performance metrics
+
+This package contains all necessary data for professional-grade landing page analysis.
+"""
+        
+        # Write analysis brief
+        with open(analysis_dir / "analysis-brief.md", 'w', encoding='utf-8') as f:
+            f.write(analysis_brief)
+        
+        # Create asset inventory
+        asset_inventory = {
+            "capture_info": {
+                "url": metadata.get('original_url'),
+                "capture_time": metadata.get('capture_time'),
+                "total_assets": sum(metadata.get('assets', {}).values())
+            },
+            "essential_files": {
+                "html": "index.html",
+                "screenshot": "screenshot.png", 
+                "metadata": "metadata.json",
+                "main_css": "main-styles.css"
+            },
+            "key_assets": {
+                "logos": self._list_files_in_dir(analysis_dir / "key-assets" / "logos"),
+                "hero_images": self._list_files_in_dir(analysis_dir / "key-assets" / "hero-images"),
+                "feature_screenshots": self._list_files_in_dir(analysis_dir / "key-assets" / "feature-screenshots")
+            },
+            "analysis_recommendations": [
+                "Start with visual assessment using screenshot.png",
+                "Review content structure in index.html",
+                "Analyze design system in main-styles.css",
+                "Evaluate brand consistency across key assets",
+                "Check technical implementation in metadata.json"
+            ]
+        }
+        
+        # Write asset inventory
+        with open(analysis_dir / "asset-inventory.json", 'w', encoding='utf-8') as f:
+            json.dump(asset_inventory, f, indent=2)
+        
+        print(f"Generated analysis documentation with {len(asset_inventory['key_assets']['logos']) + len(asset_inventory['key_assets']['hero_images']) + len(asset_inventory['key_assets']['feature_screenshots'])} key assets")
+    
+    def _list_files_in_dir(self, directory):
+        """List files in a directory"""
+        if directory.exists():
+            return [f.name for f in directory.iterdir() if f.is_file()]
+        return []
         
     def capture_page(self, url, progress_callback=None):
         """Main capture function"""
@@ -210,6 +388,10 @@ class WebsiteCloner:
             
             with open(capture_dir / "metadata.json", 'w') as f:
                 json.dump(metadata, f, indent=2)
+            
+            # Create analysis package
+            log_progress("📊 Creating analysis package...")
+            self._create_analysis_package(capture_dir, assets, metadata)
                 
             log_progress("✅ Capture completed successfully!")
             return capture_dir.name

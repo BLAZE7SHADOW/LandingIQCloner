@@ -1,0 +1,47 @@
+{
+  "capture_info": {
+    "url": "https://www.slideshots.com/",
+    "capture_time": "2025-07-19T23:10:20.728958",
+    "total_assets": 87
+  },
+  "essential_files": {
+    "html": "index.html",
+    "screenshot": "screenshot.png",
+    "metadata": "metadata.json",
+    "main_css": "main-styles.css"
+  },
+  "key_assets": {
+    "logos": [
+      "favicon.ico",
+      "logo_1.webp",
+      "logo.webp",
+      "logo_3.webp",
+      "logo_2.webp",
+      "logo_5.webp",
+      "logo_4.webp"
+    ],
+    "hero_images": [
+      "f1.4c99984d.png",
+      "f1.4c99984d_2.png",
+      "f1.4c99984d_1.png",
+      "f3.dfc4d5d3_2.png",
+      "f3.dfc4d5d3_1.png",
+      "f4.d5e4134b_1.png",
+      "f4.d5e4134b_2.png",
+      "f2.28b4e22f_1.png",
+      "photo-1472099645785-5658abf4ff4e.png",
+      "f3.dfc4d5d3.png",
+      "f2.28b4e22f_2.png",
+      "f2.28b4e22f.png",
+      "f4.d5e4134b.png"
+    ],
+    "feature_screenshots": []
+  },
+  "analysis_recommendations": [
+    "Start with visual assessment using screenshot.png",
+    "Review content structure in index.html",
+    "Analyze design system in main-styles.css",
+    "Evaluate brand consistency across key assets",
+    "Check technical implementation in metadata.json"
+  ]
+}
